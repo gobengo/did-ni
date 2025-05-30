@@ -1,0 +1,12 @@
+{
+  "name": "did-ni",
+  "version": "0.0.0",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "build:11ty": "npx @11ty/eleventy",
+    "build": "npm run build:11ty",
+    "start": "npx @11ty/eleventy --serve",
+    "test": "node --test"
+  }
+}
