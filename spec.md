@@ -1,24 +1,46 @@
-<h2 id="subtitle">Naming DIDs with Hashes</h2>
-
-&horbar;[bengo](//bengo.is)
-
-> Ni!
-
-&horbar;[Knight who says "Ni!"](https://en.wikipedia.org/wiki/Knights_Who_Say_%22Ni!%22)
-
-![image of Knight who says "Ni!"](https://upload.wikimedia.org/wikipedia/en/e/eb/Knightni.jpg)
-
 ## Abstract
 
-`did:ni` is a method for decentralized identifiers that leverages syntax of `ni:` URIs defined in [RFC 6920: Naming Things With Hashes](https://www.rfc-editor.org/rfc/rfc6920)
+`did:ni` is a method for [Decentralized Identifiers][] that leverages syntax of `ni:` URIs defined in [RFC 6920 Naming Things With Hashes][].
+
+## Epigraph
+
+> We are the Knights Who Say... Ni!&hellip;
+> 
+> We are the keepers of the sacred words: "Ni"&hellip;
+>
+> Ni! Ni! Ni! Ni!&hellip;
+>
+> We shall say "Ni!" again to you if you do not appease us.
+
+&horbar;[Head Knight who says "Ni!"](https://en.wikipedia.org/wiki/Knights_Who_Say_%22Ni!%22)
+
+![image of Knight who says "Ni!"](http://luminescencias.blogspot.com/uploaded_images/Arthur-and-Bedevere-and-the-Knights-of-Ni-715052.jpg)
+
+> Well, what is it you want?
+
+&horbar;Arthur
 
 ## Context
+
+RFC 6920 defines `ni:` URIs for named information.
 
 An example of an RFC 6920 `ni:` is
 
 ```
 ni://example.com/sha-256;f4OxZX_x_FO5LcGBSKHWXfwtSx-j1ncoSt3SABJtkGk
 ```
+
+It even describes how to use this to commit to digital signature keys
+
+> When the input to the hash algorithm is a public key value, as may be
+   used by various security protocols, the hash SHOULD be calculated
+   over the public key in an X.509 SubjectPublicKeyInfo structure
+   (Section 4.1 of [RFC5280])
+
+This spec essentially recommends how to do something similar but,
+instead of representing it as X.509 SubjectPublicKeyInfo,
+you represent it as [application/did](https://www.w3.org/TR/did-1.0/#representations).
+One benefit is that web developers frequently have ready-to-hand familiarity with `JSON.parse`, but not an X.509 parser.
 
 ## Overview
 
@@ -62,6 +84,7 @@ The `method-specific-id` in the DID MAY be a [pct-encode][]d [Named Information 
 * let `docSha256Ni` be the result of encoding `docSha256` to an RFC 6920 `ni` URI.
 * let `docSha256NiPct` be the result of [pct-encode][]ing `docSha256Ni`
 * prepend `did:ni:rfc6920:` to `docSha256NiPct`
+* normalize per [Normalize did:ni:rfc6920](#normalize-did-ni-rfc6920)
 
 ### Read (Resolve)
 
@@ -104,7 +127,17 @@ This allows `ni:mh:` URIs to be created, which also allows `did:ni:mh:` URIs to 
 
 The rest of `method-specific-id` after `mh:` is a base64url encoded [Multihash][]
 
-An Example of a `did:ni:mh` is
+#### `did:ni:mh` from nimh-SHA2
+
+This example nimh uses [SHA2][]
+
+```
+did:ni:mh:EiB_g7Flf_H8U7ktwYFIodZd_C1LH6PWdyhK3dIAEm2QaQ
+```
+
+#### `did:ni:mh` from nimh-BLAKE3
+
+This example nimh uses [BLAKE3][]
 
 ```
 did:ni:mh:HiBcp4Fa3LSE6aE2wR7-acHVMBdtVJtdGNA461KAtLNHDA
@@ -134,3 +167,6 @@ None
 [The Secret of NIMHs: Naming Things with Multihashes]: https://bengo.is/blogging/the-secret-of-nimhs/
 [Named Information Hash Algorithm registry]: https://www.iana.org/assignments/named-information/named-information.xhtml#hash-alg
 [RFC 6920 Naming Things With Hashes]: https://www.rfc-editor.org/rfc/rfc6920.html
+[BLAKE3]: https://www.ietf.org/archive/id/draft-aumasson-blake3-00.html
+[SHA2]: https://en.wikipedia.org/wiki/SHA-2
+[Decentralized Identifiers]: https://www.w3.org/TR/did-1.0/
