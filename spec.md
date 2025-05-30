@@ -57,6 +57,25 @@ Then it can be normalized to forms like
 did:ni:sha-256:f4OxZX_x_FO5LcGBSKHWXfwtSx-j1ncoSt3SABJtkGk
 ```
 
+## Syntax
+
+### ABNF
+
+```abnf
+did-ni-format     = "did:ni:" did-ni-msi
+
+did-ni-msi        = (alg-col-val / rfc6920-ni-uri)
+
+alg-col-val       = alg ":" val
+rfc-6920-ni-uri   = "rfc6920" ":" pct-encoded-NI-URI ; NI-URI from RFC 6920
+
+alg               = 1*idchar ; hash alg from RFC 6920
+val               = 1*idchar ; hash val from RFC 6920
+
+idchar             = ALPHA / DIGIT / "." / "-" / "_" / pct-encoded
+pct-encoded        = "%" HEXDIG HEXDIG
+```
+
 ## Method Name
 
 The `method-name` MUST be `ni`.
@@ -144,6 +163,39 @@ This example nimh uses [BLAKE3][]
 did:ni:mh:HiBcp4Fa3LSE6aE2wR7-acHVMBdtVJtdGNA461KAtLNHDA
 ```
 
+## Security and Privacy Considerations
+
+There are a number of security and privacy considerations that implementers will want to take into consideration when implementing this specification.
+
+### Verifiability requires privacy
+
+The did:ni method is only as verifiable as the verification methods used in the did document, and the extent to which their corresponding secret keys can be kept private by the controller.
+
+### Key Rotation Not Supported
+
+The did:ni method is a purely generative method, which means that updates are not supported.
+This can be an issue if a did:ni is expected to be used over a long period of time.
+For example, if a did:ni is ever compromised, it is not possible to rotate the compromised key.
+For this reason, using a did:ni for interactions that last weeks to months is strongly discouraged. 
+
+This consideration was inspired by [did:key](https://w3c-ccg.github.io/did-key-spec/#key-rotation-not-supported).
+
+### Deactivation Not Supported
+
+The did:ni method is a purely generative method, which means that deactivations are not supported.
+This can be an issue if a did:ni is expected to be used over a long period of time.
+For example, if a did:ni is ever compromised, it is not possible to deactivate the DID to stop an attacker from using it.
+For this reason, using a did:ni for interactions that last weeks to months is strongly discouraged. 
+
+This consideration was inspired by [did:key](https://w3c-ccg.github.io/did-key-spec/#deactivation-not-supported).
+
+### Long Term Usage is Discouraged
+
+Since there is no support for update and deactivate for the did:ni method, it is not possible to recover from a security compromise.
+For this reason, using a did:ni for interactions that last weeks to months is strongly discouraged. 
+
+This consideration was inspired by [did:key](https://w3c-ccg.github.io/did-key-spec/#long-term-usage-is-discouraged).
+
 ## Normative References
 
 * [RFC 6920 Named Information (ni) URI][]
@@ -151,11 +203,9 @@ did:ni:mh:HiBcp4Fa3LSE6aE2wR7-acHVMBdtVJtdGNA461KAtLNHDA
 
 ## Informative References
 
-None
-
-## See Also
-
-None
+* [The Secret of NIMHs: Naming Things with Multihashes][]
+* [Named Information Hash Algorithm registry][]
+* [Multihash][]
 
 <section id="conformance"></section>
 
