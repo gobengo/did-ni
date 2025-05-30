@@ -15,7 +15,6 @@ export default class Test {
 	async render({ name }) {
 		// will always be "Ted"
 		const text = await specMd.text()
-    console.debug('text', text)
     return text
 	}
 }
