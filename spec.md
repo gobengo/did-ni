@@ -1,3 +1,4 @@
+
 ## Abstract
 
 `did:ni` is a method for [Decentralized Identifiers][] that leverages syntax of `ni:` URIs defined in [RFC 6920 Naming Things With Hashes][].
