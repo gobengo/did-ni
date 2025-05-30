@@ -1,0 +1,15 @@
+#!/bin/bash
+set -e # stop on error
+# set -x
+WAS="${WAS:-https://storage.bengo.is}"
+SPACE_UUID="${SPACE_UUID:-$(uuidgen | tr A-F a-f)}"
+SPACE="$WAS/space/$SPACE_UUID"
+ID="${ID:-$HOME/.ssh/example_space}"
+DEFAULT_CONTROLLER="${DEFAULT_CONTROLLER:-''}"
+CONTROLLER="${CONTROLLER:-$DEFAULT_CONTROLLER}"
+
+space="$(./scripts/space.json.ts ${CONTROLLER+"--controller $CONTROLLER"})"
+echo "$space"
+wasup -i $ID --content-type application/json /dev/stdin "$SPACE"  <<< "$space"
+wasup -i $ID --content-type application/linkset+json /dev/stdin "$SPACE"/linkset.json <<< "$(./scripts/linkset.json.ts)"
+wasup -i $ID --content-type application/json /dev/stdin "$SPACE"/acl.json <<< "$(./scripts/acl.json.ts)"

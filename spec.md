@@ -1,3 +1,5 @@
+<h2 id="subtitle">Naming DIDs with Hashes</h2>
+
 &horbar;[bengo](//bengo.is)
 
 > Ni!
@@ -91,6 +93,23 @@ This is the process for normalizing DIDs like `did:ni:rfc6920:{encodeURIComponen
 * let `algshort` be `algb`, if defined, otherwise `alg` (e.g. `sha-256`)
 * the normalized DID is like `did:ni:{algshort}:{val}`
 
+## Examples
+
+### `did:ni:mh`
+
+i.e. Naming DIDs with Multihashes
+
+As described in [The Secret of NIMHs: Naming Things with Multihashes][], `mh` is registered by [Multihash][] into the [Named Information Hash Algorithm registry][].
+This allows `ni:mh:` URIs to be created, which also allows `did:ni:mh:` URIs to be created.
+
+The rest of `method-specific-id` after `mh:` is a base64url encoded [Multihash][]
+
+An Example of a `did:ni:mh` is
+
+```
+did:ni:mh:HiBcp4Fa3LSE6aE2wR7-acHVMBdtVJtdGNA461KAtLNHDA
+```
+
 ## Normative References
 
 * [RFC 6920 Named Information (ni) URI][]
@@ -98,14 +117,20 @@ This is the process for normalizing DIDs like `did:ni:rfc6920:{encodeURIComponen
 
 ## Informative References
 
-## Conformance
+None
 
-<section id="conformance"></section>
+## See Also
 
 None
+
+<section id="conformance"></section>
 
 [pct-encode]: https://datatracker.ietf.org/doc/html/rfc3986#section-2.1
 [pct-encoded]: https://datatracker.ietf.org/doc/html/rfc3986#section-2.1
 [Named Information (ni) URI]: https://www.rfc-editor.org/rfc/rfc6920#section-3
 [RFC 6920 Named Information (ni) URI]: https://www.rfc-editor.org/rfc/rfc6920#section-3
 [RFC 8785 JSON Canonicalization Scheme (JCS)]: https://www.rfc-editor.org/rfc/rfc8785
+[Multihash]: https://w3c-ccg.github.io/multihash/#rfc.section.D.3
+[The Secret of NIMHs: Naming Things with Multihashes]: https://bengo.is/blogging/the-secret-of-nimhs/
+[Named Information Hash Algorithm registry]: https://www.iana.org/assignments/named-information/named-information.xhtml#hash-alg
+[RFC 6920 Naming Things With Hashes]: https://www.rfc-editor.org/rfc/rfc6920.html
