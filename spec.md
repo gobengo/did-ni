@@ -112,7 +112,7 @@ Inputs
 * Initial DID Document + optional proof of latest
 
 Expectations
-* Readers MUST verify that the input initial DID document hashes to the `val` in the `method-specific-id` generated during create.
+* Readers MUST use the hash `alg` to verify that the input initial DID document hashes to the hash `val` in the `method-specific-id` generated during create.
 
 ### Update
 
