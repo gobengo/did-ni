@@ -1,0 +1,84 @@
+name: Publish to WAS
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: GitHub Environment to use
+        required: false
+        default: production
+      space:
+        description: URL of Data Space
+        required: false
+      files:
+        description: 'Files to upload'
+        required: true
+        default: '_site/*'
+      filesStripPrefix:
+        description: Strip this prefix from the files before PUT to WAS
+        required: false
+        default: '_site/'
+      ACTIONS_STEP_DEBUG:
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    name: Publish to WAS
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment}}
+    steps:
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        if: ${{ hashFiles('package.json') != '' }}
+        id: setup-node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: npm
+
+      # - name: Install Dependencies
+      #   id: npm-ci
+      #   run: npm ci
+
+      # - run: npm run --if-present build
+
+      - env:
+          WASUP_SPACE: "${{ inputs.space || vars.WASUP_SPACE }}"
+        run: |
+          if [ -z "${WASUP_SPACE}" ]; then
+            1>&2 echo "Can't proceed without a WASUP_SPACE to publish to. Set a default value in your repository settings."
+            exit 1
+          else
+            echo "Using space: ${WASUP_SPACE}"
+          fi
+
+      - run: npx @11ty/eleventy
+        env:
+          WASUP_SPACE: "${{ inputs.space || vars.WASUP_SPACE }}"
+
+      - name: Publish ${{ inputs.files }} to WAS
+        id: test-action
+        uses:  gobengo/wallet-attached-storage-action@main
+        with:
+          space: "${{ inputs.space || vars.WASUP_SPACE }}"
+          id: "${{ secrets.WASUP_ID }}"
+          # ACTIONS_STEP_DEBUG: "${{ inputs.ACTIONS_STEP_DEBUG }}"
+          # files: "${{ inputs.files }}"
+          # filesStripPrefix: "${{ inputs.filesStripPrefix }}"
+
+      - name: Print Resource URL
+        id: output-resource
+        run: echo "${{ steps.test-action.outputs.resource }}"
+
+
+        
