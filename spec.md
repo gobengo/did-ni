@@ -204,6 +204,39 @@ This example nimh uses [BLAKE3][]
 did:ni:mh%3BHiBcp4Fa3LSE6aE2wR7-acHVMBdtVJtdGNA461KAtLNHDA
 ```
 
+## DID URL Parameters
+
+[DID Parameters are described in did-core](https://www.w3.org/TR/did-1.0/#did-parameters).
+
+### `ct` DID URL Parameter
+
+`did:ni` URLs MAY include a `ct` parameter in the query string.
+
+When present, this MAY be interpreted similarly to its use in [RFC 6920 §3.1.  Content Type Query String Attribute](https://www.rfc-editor.org/rfc/rfc6920#section-3.1). It MAY indicate the content type of the named resource. It MAY inform client resolution, e.g. any value here should be used in an HTTP `Accept` header. When this is omitted, it may generally assumed to be `application/did+json`.
+
+```
+did:ni:1%3Bf4OxZX_x_FO5LcGBSKHWXfwtSx-j1ncoSt3SABJtkGk?ct=application/json
+```
+
+### `ws` DID URL Parameter
+
+`did:ni` URLs MAY include a `ws` parameter in the query string.
+
+When present, this may indicate a URL from which the named resource may be fetched, e.g. via HTTPS.
+
+```
+did:ni:1%3Bf4OxZX_x_FO5LcGBSKHWXfwtSx-j1ncoSt3SABJtkGk?ws=https://example.com/department/did.json&ws=https://backup.example.com/department/did.json
+```
+
+Note that multiple `ws` parameters MAY be included in a did:ni URL.
+As long as one of them can help locate a DID document that verifies according to the hash, then DID resolution will be possible.
+
+#### Privacy Considerats of `ws`
+
+Do not put personally identifiable information in the URLs of the `ws` URLs.
+e.g. if the DID is supposed to be private, but the `ws` value is `MyRealName.com`,
+then the DID URL with `ws` itself will imply or reveal a relationship between the supposedly private DID and a real name.
+
 ## Security and Privacy Considerations
 
 There are a number of security and privacy considerations that implementers will want to take into consideration when implementing this specification.
@@ -236,6 +269,10 @@ Since there is no support for update and deactivate for the did:ni method, it is
 For this reason, using a did:ni for interactions that last weeks to months is strongly discouraged. 
 
 This consideration was inspired by [did:key](https://w3c-ccg.github.io/did-key-spec/#long-term-usage-is-discouraged).
+
+### Other Considerations
+
+* See [Privacy Considerations of `ws`](#privacy-considerats-of-ws)
 
 ## Normative References
 
