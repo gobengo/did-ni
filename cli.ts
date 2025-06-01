@@ -47,8 +47,6 @@ class CLI {
 
       Options:
         -h --help     Show this screen.
-        -i --identity Path to the Ed25519 SSH key to use for authentication.
-                      Generate an identity with \`ssh-keygen -t ed25519\`.
     `
   }
 }
