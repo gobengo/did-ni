@@ -205,6 +205,16 @@ did:ni:1%3Bf4OxZX_x_FO5LcGBSKHWXfwtSx-j1ncoSt3SABJtkGk?ws=https://example.com/de
 Note that multiple `ws` parameters MAY be included in a did:ni URL.
 As long as one of them can help locate a DID document that verifies according to the hash, then DID resolution will be possible.
 
+#### `ws` Parameter with `data:` Value
+
+If the `ws` parameter value is a [`data:` URI][], then it can simply encode the data that the DID URL resolves to.
+
+```
+did:ni:sha-256%3BDkDA2bOnHFwMXsV-aZLsFjs56FKckciqVpT8w9f-oGQ?ws=data:text/plain;charset=utf-8;base64,eyJhdXRoZW50aWNhdGlvbiI6W3sidHlwZSI6Ik5pISJ9XX0=
+```
+
+[`data:` URI]: https://datatracker.ietf.org/doc/html/rfc2397
+
 #### Privacy Considerats of `ws`
 
 Do not put personally identifiable information in the URLs of the `ws` URLs.
