@@ -64,17 +64,35 @@ did:ni:sha-256:f4OxZX_x_FO5LcGBSKHWXfwtSx-j1ncoSt3SABJtkGk
 ```abnf
 did-ni-format     = "did:ni:" did-ni-msi
 
-did-ni-msi        = (alg-col-val / rfc6920-ni-uri)
+did-ni-msi        = (alg-col-val / rfc6920-ni-uri / hexUUID / mb-uri)
 
 alg-col-val       = alg ":" val
 rfc-6920-ni-uri   = "rfc6920" ":" pct-encoded-NI-URI ; NI-URI from RFC 6920
 
+hexUUID           = 4 hexOctet "-"
+                    2 hexOctet "-"
+                    2 hexOctet "-"
+                    2 hexOctet "-"
+                    6 hexOctet
+hexOctet          = HEXDIG HEXDIG
+DIGIT             = %x30-39
+HEXDIG            = DIGIT / "A" / "B" / "C" / "D" / "E" / "F"
+alpha             = %x61-7A   ; lowercase a-z
+hex-or-dash       = HEXDIG / "-"
+
+mb-uri            = "mb:" (mb-hexdash / mb-base58btc / mb-p)
+mb-hexdash        = "f" 1 * hex-or-dash
+mb-base58btc      = "z" 1 * BASE58BTC ; https://en.bitcoin.it/wiki/Base58Check_encoding#Base58_symbol_chart
+mb-p              = "p" 1 * alpha
+
 alg               = 1*idchar ; hash alg from RFC 6920
 val               = 1*idchar ; hash val from RFC 6920
 
-idchar             = ALPHA / DIGIT / "." / "-" / "_" / pct-encoded
-pct-encoded        = "%" HEXDIG HEXDIG
+idchar            = ALPHA / DIGIT / "." / "-" / "_" / pct-encoded
+pct-encoded       = "%" HEXDIG HEXDIG
 ```
+
+`hexUUID` is intended to match the hex-and-dash 8-4-4-4-12 syntax of the [RFC 9562 UUID Format](https://datatracker.ietf.org/doc/html/rfc9562#section-4).
 
 ## Method Name
 
@@ -86,13 +104,32 @@ The remainder of the DID, after the prefix, is specified below.
 
 ## Method-specific Identifier
 
-### pct-encoded `ni` URI
+### `did:ni:rfc692:{ni-uri-pct-encoded}`
 
 The `method-specific-id` in the DID MAY be a [pct-encode][]d [Named Information (ni) URI][].
 
 ### `did:ni:{alg}:{val}`
 
 `alg` and `val` MUST correspond to values as described in [Named Information (ni) URI][].
+
+### `did:ni:{uuid-ish}`
+
+[RFC 6920 Naming Things With Hashes S9.4 defines](https://www.rfc-editor.org/rfc/rfc6920#section-9.4)
+Suite ID 3 `sha-256-120` as a 120-bit truncated SHA-256 hash.
+
+[S6 defines a binary format](https://www.rfc-editor.org/rfc/rfc6920#section-6) with the first byte containing the Suite ID (et al).
+> A hash value that is truncated to 120 bits will result in the overall name being a 128-bit value, which may be useful for protocols that can easily use 128-bit identifiers.
+
+The [did:ni syntax][] allows the `method-specific-id` to be a 128 bit binary value, hex encoded, and formatted with dashes in a deterministic way.
+Four dashes should be inserted such that the resulting pattern of base-16 digits are in groups of size `.{8}-.{4}-.{4}-.{4}-.{12}`.
+The previous pattern is a regular expression [pattern](https://tc39.es/ecma262/#sec-patterns).
+
+The resulting value is indistinguishable from any other UUID by simple textual syntax, but strictly speaking it is not an RFC 9562 UUID because it does not satisfy RFC 9562's additional requirements on the binary layout. Instead it follows the binary encoding from [RFC 6920 Section 6](https://www.rfc-editor.org/rfc/rfc6920#section-6), e.g. the first two bits will always be 0, i.e. the "Res field" preceeding the Suite ID.
+
+```
+did:ni:03532690-57e1-2fe2-b74b-a07c892560a2
+```
+
 
 ## Method Operations
 
@@ -106,9 +143,9 @@ The `method-specific-id` in the DID MAY be a [pct-encode][]d [Named Information 
 * prepend `did:ni:rfc6920:` to `docSha256NiPct`
 * normalize per [Normalize did:ni:rfc6920](#normalize-did-ni-rfc6920)
 
-For an explication of this process, see [Appendix: Creating a did:ni](#appendix-creating-a-did-ni).
+For a more precise description of this process, see [Creating a did:ni](#creating-a-did-ni).
 
-### Read (Resolve)
+### Resolve
 
 Inputs
 * `did`: A did:ni
@@ -126,38 +163,7 @@ Expectations
 
 The read results in a DID Document of `docForDid`.
 
-#### Example Resolution JavaScript
-
-```javascript
-/**
- * @param {object} o - options
- * @param {string} o.did - a did:ni string to resolve
- * @param {object} o.doc - an unverified candidate DID Document
- * @returns {object} with standard resolution values https://www.w3.org/TR/did-resolution/#resolving
- */
-export async function resolveDidNi({ did, doc }) {
-  if (typeof doc === 'string') {
-    doc = JSON.parse(doc);
-  }
-  const didForDoc = await createDidNi({ doc: JSON.stringify(doc) })
-  if (didForDoc !== did) {
-    throw new Error(`The doc MUST match the hash in the DID`, {
-      cause: { did, doc, didForDoc, }
-    })
-  }
-  const didDocumentMetadata = {}
-  const didResolutionMetadata = {}
-  const didDocument = {
-    ...doc,
-    id: did,
-  }
-  return {
-    didDocument,
-    didDocumentMetadata,
-    didResolutionMetadata,
-  }
-}
-```
+For a more precise description of this process, see [Reading a did:ni](#resolving-a-did-ni).
 
 ### Update
 
@@ -254,9 +260,11 @@ This consideration was inspired by [did:key](https://w3c-ccg.github.io/did-key-s
 
 <section id="conformance"></section>
 
-## Appendix: Creating a did:ni
+## Example Code
 
-### JavaScript
+### Creating a did:ni
+
+#### JavaScript
 
 ```javascript
 import * as JCS from "json-canonicalize"
@@ -280,7 +288,7 @@ async function createDidNi({
 function base64urlEncode (b) { return btoa(String.fromCharCode(...b)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'') }
 ```
 
-### TypeScript
+#### TypeScript
 
 ```typescript
 import * as JCS from "json-canonicalize"
@@ -304,6 +312,42 @@ export async function createDidNi(
 function base64urlEncode (b: Uint8Array) { return btoa(String.fromCharCode(...b)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'') }
 ```
 
+### Resolving a did:ni
+
+#### JavaScript
+
+```javascript
+/**
+ * @param {object} o - options
+ * @param {string} o.did - a did:ni string to resolve
+ * @param {object} o.doc - an unverified candidate DID Document
+ * @returns {object} with standard resolution values https://www.w3.org/TR/did-resolution/#resolving
+ */
+export async function resolveDidNi({ did, doc }) {
+  if (typeof doc === 'string') {
+    doc = JSON.parse(doc);
+  }
+  const didForDoc = await createDidNi({ doc: JSON.stringify(doc) })
+  if (didForDoc !== did) {
+    throw new Error(`The doc MUST match the hash in the DID`, {
+      cause: { did, doc, didForDoc, }
+    })
+  }
+  const didDocumentMetadata = {}
+  const didResolutionMetadata = {}
+  const didDocument = {
+    ...doc,
+    id: did,
+  }
+  return {
+    didDocument,
+    didDocumentMetadata,
+    didResolutionMetadata,
+  }
+}
+```
+
+[did:ni syntax]: http://localhost:8080/#syntax
 [pct-encode]: https://datatracker.ietf.org/doc/html/rfc3986#section-2.1
 [pct-encoded]: https://datatracker.ietf.org/doc/html/rfc3986#section-2.1
 [Named Information (ni) URI]: https://www.rfc-editor.org/rfc/rfc6920#section-3
@@ -316,3 +360,5 @@ function base64urlEncode (b: Uint8Array) { return btoa(String.fromCharCode(...b)
 [BLAKE3]: https://www.ietf.org/archive/id/draft-aumasson-blake3-00.html
 [SHA2]: https://en.wikipedia.org/wiki/SHA-2
 [Decentralized Identifiers]: https://www.w3.org/TR/did-1.0/
+
+
