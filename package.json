@@ -1,6 +1,8 @@
 {
   "name": "did-ni",
-  "version": "0.1.0",
+  "description": "JavaScript library to create did:ni URIs",
+  "homepage": "https://storage.bengo.is/space/07ce89c1-f836-4d1e-94d8-b5a87f825fb8/",
+  "version": "0.1.1",
   "type": "module",
   "main": "index.js",
   "scripts": {
@@ -19,5 +21,9 @@
   "license": "MIT",
   "bin": {
     "did-ni": "bin/did-ni.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gobengo/did-ni.git"
   }
 }
