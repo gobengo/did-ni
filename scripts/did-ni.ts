@@ -14,7 +14,9 @@ export async function createDidNi(
   const docCanonicalized = canonicalize(docObject)
   const sha256Hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(docCanonicalized))
   const sha256Base64url = base64urlEncode(new Uint8Array(sha256Hash))
-  const didNi = `did:ni:sha-256:${sha256Base64url}` as const
+  const alg = `sha-256`
+  const algVal = `${alg};${sha256Base64url}`
+  const didNi = `did:ni:${encodeURIComponent(algVal)}` as const
   return didNi
 }
 

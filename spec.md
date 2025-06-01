@@ -43,43 +43,28 @@ instead of representing it as X.509 SubjectPublicKeyInfo,
 you represent it as [application/did](https://www.w3.org/TR/did-1.0/#representations).
 One benefit is that web developers frequently have ready-to-hand familiarity with `JSON.parse`, but not an X.509 parser.
 
-## Overview
-
-The simplest way to construct a `did:ni:` from a ni is to [pct-encode][] the ni and then prepend `did:ni:rfc6920:`.
-
-```
-did:ni:rfc6920:ni%3A%2F%2Fexample.com%2Fsha-256%3Bf4OxZX_x_FO5LcGBSKHWXfwtSx-j1ncoSt3SABJtkGk
-```
-
-Then it can be normalized to forms like
-
-```
-did:ni:sha-256:f4OxZX_x_FO5LcGBSKHWXfwtSx-j1ncoSt3SABJtkGk
-```
-
 ## Syntax
 
 ### ABNF
 
 ```abnf
 did-ni-format     = "did:ni:" did-ni-msi
-
-did-ni-msi        = (alg-col-val / rfc6920-ni-uri / hexUUID / mb-uri)
-
-alg-col-val       = alg ":" val
+did-ni-msi        = ( [domain ":"] hash / rfc692-ni-uri )
+hash              = (alg-val-pct / hex-uuid / mb-uri)
+alg-val           = alg ";" val
+alg-val-pct       = *( unreserved / pct-encoded )
+                  ; semantically equivalent to 'alg-val' when decoded
 rfc-6920-ni-uri   = "rfc6920" ":" pct-encoded-NI-URI ; NI-URI from RFC 6920
-
-hexUUID           = 4 hexOctet "-"
-                    2 hexOctet "-"
-                    2 hexOctet "-"
-                    2 hexOctet "-"
-                    6 hexOctet
-hexOctet          = HEXDIG HEXDIG
-DIGIT             = %x30-39
-HEXDIG            = DIGIT / "A" / "B" / "C" / "D" / "E" / "F"
+hex-uuid          = 4 hex-octet "-"
+                    2 hex-octet "-"
+                    2 hex-octet "-"
+                    2 hex-octet "-"
+                    6 hex-octet
+hex-octet         = hexdig hexdig
+digit             = %x30-39
+hexdig            = digit / "A" / "B" / "C" / "D" / "E" / "F"
 alpha             = %x61-7A   ; lowercase a-z
-hex-or-dash       = HEXDIG / "-"
-
+hex-or-dash       = hexdig / "-"
 mb-uri            = "mb:" (mb-hexdash / mb-base58btc / mb-p)
 mb-hexdash        = "f" 1 * hex-or-dash
 mb-base58btc      = "z" 1 * BASE58BTC ; https://en.bitcoin.it/wiki/Base58Check_encoding#Base58_symbol_chart
@@ -90,6 +75,7 @@ val               = 1*idchar ; hash val from RFC 6920
 
 idchar            = ALPHA / DIGIT / "." / "-" / "_" / pct-encoded
 pct-encoded       = "%" HEXDIG HEXDIG
+unreserved        = ALPHA / DIGIT / "-" / "." / "_" / "~"
 ```
 
 `hexUUID` is intended to match the hex-and-dash 8-4-4-4-12 syntax of the [RFC 9562 UUID Format](https://datatracker.ietf.org/doc/html/rfc9562#section-4).
@@ -104,13 +90,30 @@ The remainder of the DID, after the prefix, is specified below.
 
 ## Method-specific Identifier
 
-### `did:ni:rfc692:{ni-uri-pct-encoded}`
+### `did:ni:{hash}`
 
-The `method-specific-id` in the DID MAY be a [pct-encode][]d [Named Information (ni) URI][].
+```
+did:ni:sha-256%3Bf4OxZX_x_FO5LcGBSKHWXfwtSx-j1ncoSt3SABJtkGk
+did:ni:1%3Bf4OxZX_x_FO5LcGBSKHWXfwtSx-j1ncoSt3SABJtkGk
+```
 
-### `did:ni:{alg}:{val}`
+### `did:ni:{authority}:{hash}`
 
-`alg` and `val` MUST correspond to values as described in [Named Information (ni) URI][].
+```
+did:ni:did.coop:1%3Bf4OxZX_x_FO5LcGBSKHWXfwtSx-j1ncoSt3SABJtkGk
+```
+
+This corresponds to the ni URI with authority of did.coop like
+
+```
+ni://did.coop/sha-256;f4OxZX_x_FO5LcGBSKHWXfwtSx-j1ncoSt3SABJtkGk
+```
+
+[RFC 6920 §4 .well-known URI](https://www.rfc-editor.org/rfc/rfc6920#section-4) describes how to build HTTPS URLs from `ni://{authority}/{hash}` URIs.
+
+```
+https://did.coop/.well-known/ni/sha-256/f4OxZX_x_FO5LcGBSKHWXfwtSx-j1ncoSt3SABJtkGk
+```
 
 ### `did:ni:{uuid-ish}`
 
@@ -130,6 +133,9 @@ The resulting value is indistinguishable from any other UUID by simple textual s
 did:ni:03532690-57e1-2fe2-b74b-a07c892560a2
 ```
 
+### `did:ni:mb:{hash}`
+
+`{hash}` is the [Multibase](https://www.ietf.org/archive/id/draft-multiformats-multibase-07.html) text encoding of the [RFC 6920 Binary Format](https://www.rfc-editor.org/rfc/rfc6920#section-6).
 
 ## Method Operations
 
@@ -137,11 +143,9 @@ did:ni:03532690-57e1-2fe2-b74b-a07c892560a2
 
 * let `doc` be a DID Document without any `id` property
 * let `docJson` be `doc` serialized as [RFC 8785 JSON Canonicalization Scheme (JCS)][]
-* let `docSha256` be the result of hashing `docJson` with SHA-256
-* let `docSha256Ni` be the result of encoding `docSha256` to an RFC 6920 `ni` URI.
-* let `docSha256NiPct` be the result of [pct-encode][]ing `docSha256Ni`
-* prepend `did:ni:rfc6920:` to `docSha256NiPct`
-* normalize per [Normalize did:ni:rfc6920](#normalize-did-ni-rfc6920)
+* let `docHash` be the result of hashing `docJson`, e.g. with SHA-256
+* let `docHashAlgVal` be the result of encoding the hash as an `alg-val` from RFC6920 syntax (i.e. `{alg};{base64url(hash)}`). `alg` MAY be either of the hash name string or a decimal suite id.
+* let `docHashNi` be the result of prepending "did:ni" to `docHashAlgVal`
 
 For a more precise description of this process, see [Creating a did:ni](#creating-a-did-ni).
 
@@ -173,20 +177,6 @@ This document does not specify a way to update, but may do so in the future.
 
 This document does not specify a way to delete, but may do so in the future.
 
-## `did:ni` Algorithms
-
-### Normalize `did:ni:rfc6920`
-
-The simplest conformant constructions of `did:ni` are like `did:ni:rfc6920:{encodeURIComponent(ni)}`.
-However, there is a lot of unnecessary data that get's ugly pct-encoded.
-
-This is the process for normalizing DIDs like `did:ni:rfc6920:{encodeURIComponent(ni)}`:
-* let `ni` be the ni uri de-pct-encoded
-* parse the `ni` to get `alg`, `val`
-* let `algb` be the binary encoding of `alg`, if there is one
-* let `algshort` be `algb`, if defined, otherwise `alg` (e.g. `sha-256`)
-* the normalized DID is like `did:ni:{algshort}:{val}`
-
 ## Examples
 
 ### `did:ni:mh`
@@ -203,7 +193,7 @@ The rest of `method-specific-id` after `mh:` is a base64url encoded [Multihash][
 This example nimh uses [SHA2][]
 
 ```
-did:ni:mh:EiB_g7Flf_H8U7ktwYFIodZd_C1LH6PWdyhK3dIAEm2QaQ
+did:ni:mh%3BEiB_g7Flf_H8U7ktwYFIodZd_C1LH6PWdyhK3dIAEm2QaQ
 ```
 
 #### `did:ni:mh` from nimh-BLAKE3
@@ -211,7 +201,7 @@ did:ni:mh:EiB_g7Flf_H8U7ktwYFIodZd_C1LH6PWdyhK3dIAEm2QaQ
 This example nimh uses [BLAKE3][]
 
 ```
-did:ni:mh:HiBcp4Fa3LSE6aE2wR7-acHVMBdtVJtdGNA461KAtLNHDA
+did:ni:mh%3BHiBcp4Fa3LSE6aE2wR7-acHVMBdtVJtdGNA461KAtLNHDA
 ```
 
 ## Security and Privacy Considerations
