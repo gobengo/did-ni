@@ -96,7 +96,7 @@ The `method-specific-id` in the DID MAY be a [pct-encode][]d [Named Information 
 
 ## Method Operations
 
-### Create (Register)
+### Create
 
 * let `doc` be a DID Document without any `id` property
 * let `docJson` be `doc` serialized as [RFC 8785 JSON Canonicalization Scheme (JCS)][]
@@ -111,10 +111,51 @@ For an explication of this process, see [Appendix: Creating a did:ni](#appendix-
 ### Read (Resolve)
 
 Inputs
-* Initial DID Document + optional proof of latest
+* `did`: A did:ni
+* `doc` A DID Document that the resolver purports to be a valid DID Document for the did:ni
 
 Expectations
-* Readers MUST use the hash `alg` to verify that the input initial DID document hashes to the hash `val` in the `method-specific-id` generated during create.
+* let `docFromDidDoc` be `doc` but with the following modifications:
+   * remove the `id` property, if present
+* let `didForDoc` be the result of creating a did:ni for `doc` (see [Create](#create))
+* if `didForDoc` does not match `did`, the Read fails with an error code `didForDocMismatch`
+* let `docForDid` be `doc` with the following modifications
+   * set the `id` property to `did`
+
+The read results in a DID Document of `docForDid`.
+
+#### Example Resolution JavaScript
+
+```javascript
+/**
+ * @param {object} o - options
+ * @param {string} o.did - a did:ni string to resolve
+ * @param {object} o.doc - an unverified candidate DID Document
+ * @returns {object} with standard resolution values https://www.w3.org/TR/did-resolution/#resolving
+ */
+export async function resolveDidNi({ did, doc }) {
+  if (typeof doc === 'string') {
+    doc = JSON.parse(doc);
+  }
+  const didForDoc = await createDidNi({ doc: JSON.stringify(doc) })
+  if (didForDoc !== did) {
+    throw new Error(`The doc MUST match the hash in the DID`, {
+      cause: { did, doc, didForDoc, }
+    })
+  }
+  const didDocumentMetadata = {}
+  const didResolutionMetadata = {}
+  const didDocument = {
+    ...doc,
+    id: did,
+  }
+  return {
+    didDocument,
+    didDocumentMetadata,
+    didResolutionMetadata,
+  }
+}
+```
 
 ### Update
 
@@ -219,9 +260,10 @@ This consideration was inspired by [did:key](https://w3c-ccg.github.io/did-key-s
 import * as JCS from "json-canonicalize"
 
 // given a did doc like input, return a did:ni
-async function createDidNi(imports) {
-  const { doc } = imports
-  const { canonicalize = JCS.canonicalize } = imports
+async function createDidNi({
+   canonicalize = JCS.canonicalize,
+   doc,
+}) {
   const docCanonicalized = canonicalize(doc)
   const sha256Hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(docCanonicalized))
   const sha256Base64url = base64urlEncode(new Uint8Array(sha256Hash))
@@ -229,6 +271,10 @@ async function createDidNi(imports) {
   return didNi
 }
 
+/**
+ * @param b {Uint8Array} - bytes
+ * @returns {string} base64url encoded
+ */
 function base64urlEncode (b) { return btoa(String.fromCharCode(...b)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'') }
 ```
 
