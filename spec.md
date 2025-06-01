@@ -112,7 +112,9 @@ For an explication of this process, see [Appendix: Creating a did:ni](#appendix-
 
 Inputs
 * `did`: A did:ni
-* `doc` A DID Document that the resolver purports to be a valid DID Document for the did:ni
+* `doc` A DID Document provided by the resolving client
+   * In some ways it doesn't matter where this comes from, as it will be verified against the hash in the `did` itself.
+   * In practice it may be provided by the client invoking resolution, reused from a cache when the resolver has previously resolved the did:ni, or looked up in some other public or private database.
 
 Expectations
 * let `docFromDidDoc` be `doc` but with the following modifications:
