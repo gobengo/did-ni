@@ -8,5 +8,9 @@
     "build": "npm run build:11ty",
     "start": "npx @11ty/eleventy --serve",
     "test": "node --test"
+  },
+  "dependencies": {
+    "canonicalize-json": "^1.0.2",
+    "json-canonicalize": "^1.0.6"
   }
 }

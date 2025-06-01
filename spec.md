@@ -98,13 +98,15 @@ The `method-specific-id` in the DID MAY be a [pct-encode][]d [Named Information 
 
 ### Create (Register)
 
-* let `doc` be a DID Document
+* let `doc` be a DID Document without any `id` property
 * let `docJson` be `doc` serialized as [RFC 8785 JSON Canonicalization Scheme (JCS)][]
 * let `docSha256` be the result of hashing `docJson` with SHA-256
 * let `docSha256Ni` be the result of encoding `docSha256` to an RFC 6920 `ni` URI.
 * let `docSha256NiPct` be the result of [pct-encode][]ing `docSha256Ni`
 * prepend `did:ni:rfc6920:` to `docSha256NiPct`
 * normalize per [Normalize did:ni:rfc6920](#normalize-did-ni-rfc6920)
+
+For an explication of this process, see 
 
 ### Read (Resolve)
 
@@ -208,6 +210,61 @@ This consideration was inspired by [did:key](https://w3c-ccg.github.io/did-key-s
 * [Multihash][]
 
 <section id="conformance"></section>
+
+## Appendix: Creating a did:ni
+
+This script is in TypeScript and should be executable in node.js >=23.6.0.
+
+```typescript
+#!/usr/bin/env node --no-warnings
+import * as JCS from "json-canonicalize"
+
+if (process.stdin.isTTY) throw new Error('Please pipe JSON to stdin to generate a did:ni')
+
+await main({ stdin: process.stdin, canonicalize: JCS.canonicalize, console })
+
+// create a did:ni from stdin json and print the did:ni to console
+async function main(
+  imports: {
+    stdin: AsyncIterable<Uint8Array>
+    canonicalize: (doc: unknown) => string
+    console: Console
+  }
+) {
+  imports.console.log(await createDidNi(imports))
+}
+
+// given a did doc like input, return a did:ni
+async function createDidNi(
+  imports: {
+    stdin: AsyncIterable<Uint8Array>,
+    canonicalize: (doc: unknown) => string
+  }
+): Promise<`did:ni:${string}`> {
+  const streamToResponse = (stream: AsyncIterable<Uint8Array>) => new Response(new ReadableStream({
+    async pull(c) {
+      for await (const chunk of stream) c.enqueue(chunk)
+      c.close() 
+    }
+  }))
+  const docResponse = streamToResponse(imports.stdin)
+  const docObject = JSON.parse(await docResponse.text())
+  const docCanonicalized = imports.canonicalize(docObject)
+  const sha256Hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(docCanonicalized))
+  const sha256Base64url = base64urlEncode(new Uint8Array(sha256Hash))
+  const didNi = `did:ni:sha-256:${sha256Base64url}` as const
+  return didNi
+}
+
+function base64urlEncode (b: Uint8Array) { return btoa(String.fromCharCode(...b)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'') }
+```
+
+Example Usage
+
+```shell
+⚡ echo '{"authentication":[{"type":"Ni!"}]}' | ./scripts/did-ni.ts
+did:ni:sha-256:DkDA2bOnHFwMXsV-aZLsFjs56FKckciqVpT8w9f-oGQ
+```
 
 [pct-encode]: https://datatracker.ietf.org/doc/html/rfc3986#section-2.1
 [pct-encoded]: https://datatracker.ietf.org/doc/html/rfc3986#section-2.1
