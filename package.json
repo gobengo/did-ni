@@ -10,6 +10,12 @@
     "test": "node --test"
   },
   "dependencies": {
-    "json-canonicalize": "^1.0.6"
+    "dedent": "^1.6.0",
+    "json-canonicalize": "^1.0.6",
+    "tsx": "^4.19.4"
+  },
+  "license": "MIT",
+  "bin": {
+    "did-ni": "bin/did-ni.js"
   }
 }
