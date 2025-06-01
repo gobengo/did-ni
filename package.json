@@ -10,6 +10,7 @@
     "test": "node --test"
   },
   "dependencies": {
+    "@types/node": "^22.15.29",
     "dedent": "^1.6.0",
     "esbuild": "^0.25.5",
     "json-canonicalize": "^1.0.6",
