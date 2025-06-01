@@ -10,7 +10,6 @@
     "test": "node --test"
   },
   "dependencies": {
-    "canonicalize-json": "^1.0.2",
     "json-canonicalize": "^1.0.6"
   }
 }
