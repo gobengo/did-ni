@@ -177,32 +177,6 @@ This document does not specify a way to update, but may do so in the future.
 
 This document does not specify a way to delete, but may do so in the future.
 
-## Examples
-
-### `did:ni:mh`
-
-i.e. Naming DIDs with Multihashes
-
-As described in [The Secret of NIMHs: Naming Things with Multihashes][], `mh` is registered by [Multihash][] into the [Named Information Hash Algorithm registry][].
-This allows `ni:mh:` URIs to be created, which also allows `did:ni:mh:` URIs to be created.
-
-The rest of `method-specific-id` after `mh:` is a base64url encoded [Multihash][]
-
-#### `did:ni:mh` from nimh-SHA2
-
-This example nimh uses [SHA2][]
-
-```
-did:ni:mh%3BEiB_g7Flf_H8U7ktwYFIodZd_C1LH6PWdyhK3dIAEm2QaQ
-```
-
-#### `did:ni:mh` from nimh-BLAKE3
-
-This example nimh uses [BLAKE3][]
-
-```
-did:ni:mh%3BHiBcp4Fa3LSE6aE2wR7-acHVMBdtVJtdGNA461KAtLNHDA
-```
 
 ## DID URL Parameters
 
@@ -236,6 +210,34 @@ As long as one of them can help locate a DID document that verifies according to
 Do not put personally identifiable information in the URLs of the `ws` URLs.
 e.g. if the DID is supposed to be private, but the `ws` value is `MyRealName.com`,
 then the DID URL with `ws` itself will imply or reveal a relationship between the supposedly private DID and a real name.
+
+
+## Examples
+
+### `did:ni:mh`
+
+i.e. Naming DIDs with Multihashes
+
+As described in [The Secret of NIMHs: Naming Things with Multihashes][], `mh` is registered by [Multihash][] into the [Named Information Hash Algorithm registry][].
+This allows `ni:mh:` URIs to be created, which also allows `did:ni:mh:` URIs to be created.
+
+The rest of `method-specific-id` after `mh:` is a base64url encoded [Multihash][]
+
+#### `did:ni:mh` from nimh-SHA2
+
+This example nimh uses [SHA2][]
+
+```
+did:ni:mh%3BEiB_g7Flf_H8U7ktwYFIodZd_C1LH6PWdyhK3dIAEm2QaQ
+```
+
+#### `did:ni:mh` from nimh-BLAKE3
+
+This example nimh uses [BLAKE3][]
+
+```
+did:ni:mh%3BHiBcp4Fa3LSE6aE2wR7-acHVMBdtVJtdGNA461KAtLNHDA
+```
 
 ## Security and Privacy Considerations
 
