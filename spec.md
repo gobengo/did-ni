@@ -106,7 +106,7 @@ The `method-specific-id` in the DID MAY be a [pct-encode][]d [Named Information 
 * prepend `did:ni:rfc6920:` to `docSha256NiPct`
 * normalize per [Normalize did:ni:rfc6920](#normalize-did-ni-rfc6920)
 
-For an explication of this process, see 
+For an explication of this process, see [Appendix: Creating a did:ni](#appendix-creating-a-did-ni).
 
 ### Read (Resolve)
 
@@ -215,6 +215,13 @@ This consideration was inspired by [did:key](https://w3c-ccg.github.io/did-key-s
 
 This script is in TypeScript and should be executable in node.js >=23.6.0.
 
+Example Usage:
+
+```shell
+⚡ echo '{"authentication":[{"type":"Ni!"}]}' | ./scripts/did-ni.ts
+did:ni:sha-256:DkDA2bOnHFwMXsV-aZLsFjs56FKckciqVpT8w9f-oGQ
+```
+
 ```typescript
 #!/usr/bin/env node --no-warnings
 import * as JCS from "json-canonicalize"
@@ -257,13 +264,6 @@ async function createDidNi(
 }
 
 function base64urlEncode (b: Uint8Array) { return btoa(String.fromCharCode(...b)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'') }
-```
-
-Example Usage
-
-```shell
-⚡ echo '{"authentication":[{"type":"Ni!"}]}' | ./scripts/did-ni.ts
-did:ni:sha-256:DkDA2bOnHFwMXsV-aZLsFjs56FKckciqVpT8w9f-oGQ
 ```
 
 [pct-encode]: https://datatracker.ietf.org/doc/html/rfc3986#section-2.1
