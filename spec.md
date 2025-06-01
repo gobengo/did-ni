@@ -213,50 +213,40 @@ This consideration was inspired by [did:key](https://w3c-ccg.github.io/did-key-s
 
 ## Appendix: Creating a did:ni
 
-This script is in TypeScript and should be executable in node.js >=23.6.0.
+### JavaScript
 
-Example Usage:
-
-```shell
-⚡ echo '{"authentication":[{"type":"Ni!"}]}' | ./scripts/did-ni.ts
-did:ni:sha-256:DkDA2bOnHFwMXsV-aZLsFjs56FKckciqVpT8w9f-oGQ
-```
-
-```typescript
-#!/usr/bin/env node --no-warnings
+```javascript
 import * as JCS from "json-canonicalize"
 
-if (process.stdin.isTTY) throw new Error('Please pipe JSON to stdin to generate a did:ni')
-
-await main({ stdin: process.stdin, canonicalize: JCS.canonicalize, console })
-
-// create a did:ni from stdin json and print the did:ni to console
-async function main(
-  imports: {
-    stdin: AsyncIterable<Uint8Array>
-    canonicalize: (doc: unknown) => string
-    console: Console
-  }
-) {
-  imports.console.log(await createDidNi(imports))
+// given a did doc like input, return a did:ni
+async function createDidNi(imports) {
+  const { doc } = imports
+  const { canonicalize = JCS.canonicalize } = imports
+  const docCanonicalized = canonicalize(doc)
+  const sha256Hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(docCanonicalized))
+  const sha256Base64url = base64urlEncode(new Uint8Array(sha256Hash))
+  const didNi = `did:ni:sha-256:${sha256Base64url}`
+  return didNi
 }
 
+function base64urlEncode (b) { return btoa(String.fromCharCode(...b)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'') }
+```
+
+### TypeScript
+
+```typescript
+import * as JCS from "json-canonicalize"
+
 // given a did doc like input, return a did:ni
-async function createDidNi(
+export async function createDidNi(
   imports: {
-    stdin: AsyncIterable<Uint8Array>,
+    doc: unknown,
     canonicalize: (doc: unknown) => string
   }
 ): Promise<`did:ni:${string}`> {
-  const streamToResponse = (stream: AsyncIterable<Uint8Array>) => new Response(new ReadableStream({
-    async pull(c) {
-      for await (const chunk of stream) c.enqueue(chunk)
-      c.close() 
-    }
-  }))
-  const docResponse = streamToResponse(imports.stdin)
-  const docObject = JSON.parse(await docResponse.text())
-  const docCanonicalized = imports.canonicalize(docObject)
+  const { doc } = imports
+  const { canonicalize = JCS.canonicalize } = imports
+  const docCanonicalized = canonicalize(doc)
   const sha256Hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(docCanonicalized))
   const sha256Base64url = base64urlEncode(new Uint8Array(sha256Hash))
   const didNi = `did:ni:sha-256:${sha256Base64url}` as const
