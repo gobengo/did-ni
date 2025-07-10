@@ -15,7 +15,7 @@
 
 &horbar;[Head Knight who says "Ni!"](https://en.wikipedia.org/wiki/Knights_Who_Say_%22Ni!%22)
 
-![image of Knight who says "Ni!"](http://luminescencias.blogspot.com/uploaded_images/Arthur-and-Bedevere-and-the-Knights-of-Ni-715052.jpg)
+![image of Knight who says "Ni!"](./public/ni-wdyw.jpg)
 
 > Well, what is it you want?
 
